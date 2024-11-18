@@ -1,18 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Calendar, Menu, MapPin, Clock, Users, ImageIcon } from 'lucide-react'
+import { Calendar, MapPin, Clock, Users, ImageIcon } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import Navbar from '@/components/navbar'
 export default function CreateEvent() {
-  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <div className="flex flex-col min-h-screen">

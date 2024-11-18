@@ -9,7 +9,6 @@ import { Calendar, Menu, Edit, Trash2, MapPin, Clock, Plus, ChevronRight } from 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Footer from '@/components/footer'
 
@@ -108,7 +107,7 @@ export default function MyEvents() {
                 <CardTitle>Boost Your Next Event</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>Upgrade to Eventify Pro to access premium features and increase your event's visibility!</p>
+                <p>Upgrade to Eventify Pro to access premium features and increase your events visibility!</p>
               </CardContent>
               <CardFooter>
                 <Button variant="secondary">
