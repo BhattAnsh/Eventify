@@ -2,9 +2,8 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "./ui/button";
-type Props = {};
 
-function Hero({}: Props) {
+function Hero() {
   return (
     <>
       <section className="w-full h-[100vh] flex flex-col items-center justify-center py-12 md:py-24 lg:py-32 xl:py-48 px-4 sm:px-6 lg:px-8">

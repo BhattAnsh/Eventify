@@ -1,9 +1,8 @@
 "use client";
 import React from "react";
 
-type Props = {};
 
-function Review({}: Props) {
+function Review() {
   return (
     <>
       <section className="w-full h-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800 px-4 sm:px-6 lg:px-8">

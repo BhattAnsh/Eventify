@@ -1,8 +1,7 @@
 import React from "react";
 import Link from "next/link";
-type Props = {};
 
-function Footer({}: Props) {
+function Footer() {
   return (
     <>
       <footer className="flex flex-col sm:flex-row justify-between items-center py-6 w-full shrink-0 px-4 sm:px-6 lg:px-8 border-t">
