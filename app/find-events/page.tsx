@@ -1,17 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Calendar, Users, Search, MapPin, Menu, Clock } from 'lucide-react'
+import { Calendar, Users, Search, MapPin, Clock } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import Navbar from "@/components/navbar";
 
 export default function FindEvents() {
-  const [isOpen, setIsOpen] = useState(false)
 
   // Mock data for events
   const events = [
@@ -25,50 +23,7 @@ export default function FindEvents() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-14 flex items-center justify-between border-b">
-        <Link className="flex items-center justify-center" href="/">
-          <Calendar className="h-6 w-6" />
-          <span className="ml-2 text-xl sm:text-2xl font-bold">Eventify</span>
-        </Link>
-        <nav className="hidden md:flex gap-4 sm:gap-6">
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/">
-            Home
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="/find-events">
-            Find Events
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            Create Event
-          </Link>
-          <Link className="text-sm font-medium hover:underline underline-offset-4" href="#">
-            My Events
-          </Link>
-        </nav>
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="md:hidden">
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right">
-            <nav className="flex flex-col gap-4">
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="/" onClick={() => setIsOpen(false)}>
-                Home
-              </Link>
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="/find-events" onClick={() => setIsOpen(false)}>
-                Find Events
-              </Link>
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="#" onClick={() => setIsOpen(false)}>
-                Create Event
-              </Link>
-              <Link className="text-sm font-medium hover:underline underline-offset-4" href="#" onClick={() => setIsOpen(false)}>
-                My Events
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </header>
+      <Navbar />
       <main className="flex-1 py-12 px-4 md:px-6 lg:px-8">
         <div className="container mx-auto">
           <h1 className="text-3xl font-bold mb-8">Find Events</h1>
