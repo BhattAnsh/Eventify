@@ -1,0 +1,132 @@
+{
+  "events": [
+    {
+      "id": "event1",
+      "title": "Tech Conference 2024",
+      "description": "Annual technology conference featuring latest innovations",
+      "date": "2024-06-15",
+      "time": "09:00 AM",
+      "endTime": "05:00 PM",
+      "location": "Convention Center, New York",
+      "address": "123 Tech Street, New York, NY 10001",
+      "category": "Technology",
+      "subcategory": "Conference",
+      "capacity": 500,
+      "registeredCount": 250,
+      "imageUrl": "https://example.com/images/tech-conf.jpg",
+      "createdBy": "user1",
+      "status": "upcoming",
+      "volunteers": ["user2", "user3"],
+      "volunteersNeeded": 10,
+      "volunteersRegistered": 2,
+      "requirements": [
+        "Technical background",
+        "Available for full day",
+        "Experience in event management"
+      ],
+      "tags": ["tech", "innovation", "networking"],
+      "createdAt": "2024-03-13T10:30:00.000Z",
+      "updatedAt": "2024-03-13T10:30:00.000Z"
+    },
+    {
+      "id": "event2",
+      "title": "Community Clean-up Drive",
+      "description": "Join us in cleaning up the local park and making our community better",
+      "date": "2024-04-20",
+      "time": "08:00 AM",
+      "endTime": "12:00 PM",
+      "location": "Central Park",
+      "address": "456 Park Avenue, New York, NY 10002",
+      "category": "Environment",
+      "subcategory": "Community Service",
+      "capacity": 100,
+      "registeredCount": 45,
+      "imageUrl": "https://example.com/images/cleanup.jpg",
+      "createdBy": "user2",
+      "status": "upcoming",
+      "volunteers": ["user1"],
+      "volunteersNeeded": 20,
+      "volunteersRegistered": 1,
+      "requirements": [
+        "Bring own gloves",
+        "Comfortable clothing",
+        "Water bottle"
+      ],
+      "tags": ["environment", "community", "cleanup"],
+      "createdAt": "2024-03-14T09:30:00.000Z",
+      "updatedAt": "2024-03-14T09:30:00.000Z"
+    },
+    {
+      "id": "event3",
+      "title": "Youth Mentorship Program",
+      "description": "Mentor local youth in career development and life skills",
+      "date": "2024-05-01",
+      "time": "03:00 PM",
+      "endTime": "06:00 PM",
+      "location": "Community Center",
+      "address": "789 Community Blvd, New York, NY 10003",
+      "category": "Education",
+      "subcategory": "Mentorship",
+      "capacity": 50,
+      "registeredCount": 20,
+      "imageUrl": "https://example.com/images/mentorship.jpg",
+      "createdBy": "user1",
+      "status": "upcoming",
+      "volunteers": [],
+      "volunteersNeeded": 15,
+      "volunteersRegistered": 0,
+      "requirements": [
+        "Professional experience",
+        "Background check required",
+        "Minimum 2-year commitment"
+      ],
+      "tags": ["youth", "mentorship", "education"],
+      "createdAt": "2024-03-15T14:30:00.000Z",
+      "updatedAt": "2024-03-15T14:30:00.000Z"
+    },
+    {
+      "id": "event4",
+      "title": "Food Bank Distribution",
+      "description": "Help distribute food to families in need",
+      "date": "2024-04-10",
+      "time": "10:00 AM",
+      "endTime": "02:00 PM",
+      "location": "Local Food Bank",
+      "address": "101 Helping Hand Street, New York, NY 10004",
+      "category": "Community Service",
+      "subcategory": "Food Distribution",
+      "capacity": 75,
+      "registeredCount": 30,
+      "imageUrl": "https://example.com/images/foodbank.jpg",
+      "createdBy": "user3",
+      "status": "upcoming",
+      "volunteers": [],
+      "volunteersNeeded": 25,
+      "volunteersRegistered": 0,
+      "requirements": [
+        "Able to lift 25 pounds",
+        "Food handling certification preferred",
+        "Reliable transportation"
+      ],
+      "tags": ["food bank", "community service", "volunteering"],
+      "createdAt": "2024-03-16T11:30:00.000Z",
+      "updatedAt": "2024-03-16T11:30:00.000Z"
+    }
+  ],
+  "categories": [
+    "Technology",
+    "Environment",
+    "Education",
+    "Community Service",
+    "Health",
+    "Arts & Culture",
+    "Sports",
+    "Animal Welfare"
+  ],
+  "subcategories": {
+    "Technology": ["Conference", "Workshop", "Hackathon"],
+    "Environment": ["Clean-up", "Conservation", "Awareness"],
+    "Education": ["Mentorship", "Tutoring", "Workshop"],
+    "Community Service": ["Food Distribution", "Elder Care", "Youth Programs"]
+  }
+} 

@@ -1,106 +1,326 @@
 'use client'
 
-import Link from 'next/link'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Calendar, MapPin, Clock, Users, ImageIcon } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import Navbar from '@/components/navbar'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { eventStorage } from '@/utils/storage';
+import ProtectedRoute from '@/components/protected-route';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Navbar from '@/components/navbar';
+import Footer from '@/components/footer';
+import { useToast } from "@/components/ui/use-toast";
+import Image from 'next/image';
+
 export default function CreateEvent() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [eventData, setEventData] = useState({
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    category: '',
+    description: ''
+  });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (!user.email) {
+        throw new Error('User not logged in');
+      }
+
+      eventStorage.createEvent({
+        ...eventData,
+        userId: user.email
+      });
+      
+      toast({
+        title: "Success!",
+        description: "Event created successfully"
+      });
+      
+      router.push('/my-events');
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create event. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      <main className="flex-1 py-12 px-4 md:px-6 lg:px-8">
-        <div className="container mx-auto max-w-2xl">
-          <h1 className="text-3xl font-bold mb-8">Create New Event</h1>
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="event-title">Event Title</Label>
-                  <Input id="event-title" placeholder="Enter event title" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="event-description">Event Description</Label>
-                  <Textarea id="event-description" placeholder="Describe your event" required />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <ProtectedRoute>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 py-12 px-4 md:px-6 lg:px-8 bg-background">
+          <div className="container mx-auto max-w-7xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div className="bg-card rounded-lg shadow-lg p-6 md:p-8 border">
+                <h1 className="text-3xl font-bold mb-8">Create New Event</h1>
+                <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="event-date">Date</Label>
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
-                      <Input id="event-date" type="date" className="pl-10" required />
+                    <Label htmlFor="image">Event Image</Label>
+                    <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
+                      <input
+                        type="file"
+                        id="image"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                      <label
+                        htmlFor="image"
+                        className="cursor-pointer flex flex-col items-center space-y-2"
+                      >
+                        {previewImage ? (
+                          <div className="w-full h-40 relative rounded-lg overflow-hidden">
+                            <Image
+                              src={previewImage}
+                              alt="Preview"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-40 bg-gray-50 rounded-lg flex items-center justify-center">
+                            <svg
+                              className="w-12 h-12 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                              />
+                            </svg>
+                          </div>
+                        )}
+                        <span className="text-sm text-muted-foreground">
+                          {previewImage ? 'Click to change image' : 'Click to upload event image'}
+                        </span>
+                      </label>
                     </div>
                   </div>
+
                   <div className="space-y-2">
-                    <Label htmlFor="event-time">Time</Label>
-                    <div className="relative">
-                      <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
-                      <Input id="event-time" type="time" className="pl-10" required />
+                    <Label htmlFor="title">Event Title</Label>
+                    <Input
+                      id="title"
+                      value={eventData.title}
+                      onChange={(e) => setEventData({...eventData, title: e.target.value})}
+                      className="bg-background"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="date">Date</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        value={eventData.date}
+                        onChange={(e) => setEventData({...eventData, date: e.target.value})}
+                        className="bg-background"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="time">Time</Label>
+                      <Input
+                        id="time"
+                        type="time"
+                        value={eventData.time}
+                        onChange={(e) => setEventData({...eventData, time: e.target.value})}
+                        className="bg-background"
+                        required
+                      />
                     </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="event-location">Location</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
-                    <Input id="event-location" placeholder="Event location" className="pl-10" required />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input
+                      id="location"
+                      value={eventData.location}
+                      onChange={(e) => setEventData({...eventData, location: e.target.value})}
+                      className="bg-background"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={eventData.category}
+                      onValueChange={(value) => setEventData({...eventData, category: value})}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Technology">Technology</SelectItem>
+                        <SelectItem value="Environment">Environment</SelectItem>
+                        <SelectItem value="Education">Education</SelectItem>
+                        <SelectItem value="Community Service">Community Service</SelectItem>
+                        <SelectItem value="Health">Health</SelectItem>
+                        <SelectItem value="Arts & Culture">Arts & Culture</SelectItem>
+                        <SelectItem value="Sports">Sports</SelectItem>
+                        <SelectItem value="Animal Welfare">Animal Welfare</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <textarea
+                      id="description"
+                      value={eventData.description}
+                      onChange={(e) => setEventData({...eventData, description: e.target.value})}
+                      className="w-full min-h-[100px] p-3 rounded-md border bg-background"
+                      required
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Creating...' : 'Create Event'}
+                  </Button>
+                </form>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="sticky top-6 space-y-6">
+                  <div className="bg-card rounded-lg shadow-lg p-6 border">
+                    <h2 className="text-xl font-semibold mb-4">Event Preview</h2>
+                    <div className="space-y-6">
+                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative">
+                        {previewImage ? (
+                          <Image
+                            src={previewImage}
+                            alt="Event preview"
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-400">
+                            No image uploaded
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <h3 className="font-semibold text-lg">
+                            {eventData.title || 'Event Title'}
+                          </h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Date</p>
+                            <p>{eventData.date || 'Not set'}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Time</p>
+                            <p>{eventData.time || 'Not set'}</p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground">Location</p>
+                          <p>{eventData.location || 'Not set'}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground">Category</p>
+                          <p>{eventData.category || 'Not set'}</p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground">Description</p>
+                          <p className="text-sm line-clamp-3">
+                            {eventData.description || 'No description provided'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-card rounded-lg shadow-lg p-6 border">
+                    <h2 className="text-xl font-semibold mb-4">Event Creation Guide</h2>
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Add a compelling title that clearly describes your event
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Upload a high-quality image to attract participants
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Provide detailed information about date, time, and location
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Choose the most relevant category for your event
+                      </li>
+                    </ul>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="event-category">Category</Label>
-                  <Select required>
-                    <SelectTrigger id="event-category">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="music">Music</SelectItem>
-                      <SelectItem value="food-drink">Food & Drink</SelectItem>
-                      <SelectItem value="art">Art</SelectItem>
-                      <SelectItem value="sports">Sports</SelectItem>
-                      <SelectItem value="business">Business</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="event-capacity">Capacity</Label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
-                    <Input id="event-capacity" type="number" placeholder="Number of attendees" className="pl-10" required />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="event-image">Event Image</Label>
-                  <div className="relative">
-                    <ImageIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
-                    <Input id="event-image" type="file" accept="image/*" className="pl-10" />
-                  </div>
-                </div>
-                <Button type="submit" className="w-full">Create Event</Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-      <footer className="flex flex-col sm:flex-row justify-between items-center py-6 w-full shrink-0 px-4 sm:px-6 lg:px-8 border-t">
-        <p className="text-xs text-gray-500 dark:text-gray-400">© 2023 Eventify. All rights reserved.</p>
-        <nav className="flex gap-4 sm:gap-6 mt-4 sm:mt-0">
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Terms of Service
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Privacy
-          </Link>
-        </nav>
-      </footer>
-    </div>
-  )
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    </ProtectedRoute>
+  );
 }

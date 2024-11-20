@@ -1,122 +1,342 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Calendar, Users, Search, MapPin, Clock } from 'lucide-react'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import Navbar from "@/components/navbar";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, MapPin, Clock, Users } from 'lucide-react';
+import { dataManager } from '@/utils/dataManager';
+import { toast } from "sonner";
+import Image from 'next/image';
+import { Search } from 'lucide-react';
+import Navbar from '@/components/navbar';
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { VolunteerForm } from '@/components/volunteer-form';
+import { auth } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
+
+interface Event {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  category: string;
+  imageUrl: string;
+  volunteersNeeded: number;
+  volunteersRegistered: number;
+  requirements: string[];
+}
 
 export default function FindEvents() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+  const router = useRouter();
 
-  // Mock data for events
-  const events = [
-    { id: 1, title: "Tech Conference 2023", date: "2023-09-15", time: "9:00 AM - 5:00 PM", location: "San Francisco Convention Center", category: "Technology", description: "Join us for the biggest tech conference of the year, featuring keynotes from industry leaders and hands-on workshops on the latest technologies." },
-    { id: 2, title: "Summer Music Festival", date: "2023-07-22", time: "12:00 PM - 11:00 PM", location: "Zilker Park, Austin, TX", category: "Music", description: "A day-long celebration of music featuring top artists from around the world. Food vendors and art installations will be present throughout the venue." },
-    { id: 3, title: "Food & Wine Expo", date: "2023-08-05", time: "11:00 AM - 8:00 PM", location: "Jacob K. Javits Convention Center, New York, NY", category: "Food & Drink", description: "Explore culinary delights from renowned chefs and taste exquisite wines from global vineyards. Cooking demonstrations and wine tasting sessions available." },
-    { id: 4, title: "Art Gallery Opening", date: "2023-09-30", time: "7:00 PM - 10:00 PM", location: "LACMA, Los Angeles, CA", category: "Art", description: "Be among the first to view our new exhibition featuring works from emerging artists. Meet the artists and enjoy complimentary refreshments." },
-    { id: 5, title: "Marathon for Charity", date: "2023-10-10", time: "7:00 AM - 2:00 PM", location: "Grant Park, Chicago, IL", category: "Sports", description: "Run for a cause! Join thousands of participants in this annual charity marathon. All proceeds go to local children's hospitals." },
-    { id: 6, title: "Business Networking Mixer", date: "2023-08-18", time: "6:00 PM - 9:00 PM", location: "Westin Copley Place, Boston, MA", category: "Business", description: "Connect with professionals from various industries. Perfect opportunity to expand your network and discover new business opportunities." },
-  ]
+  useEffect(() => {
+    if (!auth.isAuthenticated()) {
+      toast.error('Please login to view events');
+      router.push('/login');
+    }
+  }, [router]);
+
+  useEffect(() => {
+    // Load initial data
+    const allEvents = dataManager.getAllEvents();
+    const allCategories = dataManager.getCategories();
+    setEvents(allEvents);
+    setFilteredEvents(allEvents);
+    setCategories(allCategories);
+  }, []);
+
+  // Handle search and filtering
+  useEffect(() => {
+    let filtered = events;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(event => 
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory && selectedCategory !== 'all') {
+      filtered = filtered.filter(event => event.category === selectedCategory);
+    }
+
+    setFilteredEvents(filtered);
+  }, [searchTerm, selectedCategory, events]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-white">
+      {/* Navbar */}
       <Navbar />
-      <main className="flex-1 py-12 px-4 md:px-6 lg:px-8">
-        <div className="container mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Find Events</h1>
-          <div className="mb-8">
-            <form className="flex flex-col sm:flex-row gap-4">
-              <Input className="flex-grow" placeholder="Search events..." type="search" />
-              <Select>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Category" />
+
+      {/* Main Content */}
+      <main className="pt-24 pb-16 px-4">
+        {/* Header and Search Section */}
+        <div className="max-w-7xl mx-auto space-y-12">
+          {/* Header */}
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight">
+              Find Events
+            </h1>
+            <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
+              Discover meaningful opportunities to make a difference in your community
+            </p>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search events..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 h-12 bg-gray-50 border-gray-200 
+                    placeholder:text-gray-400 text-gray-900
+                    focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary
+                    hover:border-gray-300 transition-colors rounded-xl"
+                />
+              </div>
+              
+              <Select
+                value={selectedCategory || undefined}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger 
+                  className="w-full sm:w-[180px] h-12 bg-gray-50 border-gray-200 
+                    text-gray-900 hover:border-gray-300 transition-colors rounded-xl
+                    focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
+                  <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="technology">Technology</SelectItem>
-                  <SelectItem value="music">Music</SelectItem>
-                  <SelectItem value="food-drink">Food & Drink</SelectItem>
-                  <SelectItem value="art">Art</SelectItem>
-                  <SelectItem value="sports">Sports</SelectItem>
-                  <SelectItem value="business">Business</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <Button type="submit">
-                <Search className="mr-2 h-4 w-4" />
-                Search
-              </Button>
-            </form>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <Card key={event.id}>
-                <CardHeader>
-                  <CardTitle>{event.title}</CardTitle>
+
+          {/* Events Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
+            {filteredEvents.map((event) => (
+              <Card 
+                key={event.id} 
+                className="flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300 rounded-2xl border-gray-100"
+              >
+                {event.imageUrl && (
+                  <div className="relative w-full pt-[66%] overflow-hidden">
+                    <Image 
+                      src={event.imageUrl} 
+                      alt={event.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      priority={false}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  </div>
+                )}
+
+                <CardHeader className="space-y-2">
+                  <CardTitle className="text-xl font-semibold text-gray-900">
+                    {event.title}
+                  </CardTitle>
+                  <p className="text-sm text-gray-500 line-clamp-2">
+                    {event.description}
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    <Calendar className="inline-block w-4 h-4 mr-1" />
-                    {event.date}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    <MapPin className="inline-block w-4 h-4 mr-1" />
-                    {event.location}
-                  </p>
+                
+                <CardContent className="flex-grow space-y-3">
+                  <div className="space-y-2 text-muted-foreground">
+                    <p className="flex items-center text-sm">
+                      <Calendar className="w-4 h-4 mr-2 text-primary" />
+                      {event.date}
+                    </p>
+                    <p className="flex items-center text-sm">
+                      <Clock className="w-4 h-4 mr-2 text-primary" />
+                      {event.time}
+                    </p>
+                    <p className="flex items-center text-sm">
+                      <MapPin className="w-4 h-4 mr-2 text-primary" />
+                      {event.location}
+                    </p>
+                    <div className="flex items-center justify-between pt-2">
+                      <p className="flex items-center text-sm">
+                        <Users className="w-4 h-4 mr-2 text-primary" />
+                        {event.volunteersRegistered}/{event.volunteersNeeded}
+                      </p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        {event.category}
+                      </span>
+                    </div>
+                  </div>
                 </CardContent>
-                <CardFooter>
+
+                <CardFooter className="flex flex-col gap-3 pt-4">
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="w-full">View Details</Button>
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-11 hover:bg-primary/10 transition-colors"
+                      >
+                        View Details
+                      </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
+                    <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>{event.title}</DialogTitle>
-                        <DialogDescription>Event Details</DialogDescription>
+                        <DialogTitle className="text-2xl font-semibold">
+                          {event.title}
+                        </DialogTitle>
+                        <DialogDescription>
+                          Event Details
+                        </DialogDescription>
                       </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Calendar className="h-4 w-4" />
-                          <span className="col-span-3">{event.date}</span>
+                      <div className="grid gap-6 py-4">
+                        {event.imageUrl && (
+                          <div className="relative w-full h-64 rounded-lg overflow-hidden">
+                            <Image 
+                              src={event.imageUrl} 
+                              alt={event.title}
+                              fill
+                              sizes="(max-width: 500px) 100vw"
+                              className="object-cover"
+                              priority={false}
+                            />
+                          </div>
+                        )}
+                        
+                        <p className="text-muted-foreground">{event.description}</p>
+                        
+                        <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
+                          <p className="flex items-center text-sm">
+                            <Calendar className="w-4 h-4 mr-2 text-primary" />
+                            {event.date}
+                          </p>
+                          <p className="flex items-center text-sm">
+                            <Clock className="w-4 h-4 mr-2 text-primary" />
+                            {event.time}
+                          </p>
+                          <p className="flex items-center text-sm">
+                            <MapPin className="w-4 h-4 mr-2 text-primary" />
+                            {event.location}
+                          </p>
+                          <p className="flex items-center text-sm">
+                            <Users className="w-4 h-4 mr-2 text-primary" />
+                            {event.volunteersRegistered}/{event.volunteersNeeded} Volunteers
+                          </p>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Clock className="h-4 w-4" />
-                          <span className="col-span-3">{event.time}</span>
+                        
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-foreground">Requirements:</h4>
+                          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                            {event.requirements.map((req, index) => (
+                              <li key={index}>{req}</li>
+                            ))}
+                          </ul>
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <MapPin className="h-4 w-4" />
-                          <span className="col-span-3">{event.location}</span>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <Users className="h-4 w-4" />
-                          <span className="col-span-3">{event.category}</span>
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                          <span className="font-semibold">Description:</span>
-                          <p className="col-span-3">{event.description}</p>
+
+                        <div className="space-y-4 pt-4 border-t">
+                          <h4 className="font-semibold text-foreground">Volunteer Registration</h4>
+                          <div className="space-y-3">
+                            <div className="grid gap-2">
+                              <Label htmlFor="name">Full Name</Label>
+                              <Input
+                                id="name"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                placeholder="Enter your full name"
+                                required
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="email">Email</Label>
+                              <Input
+                                id="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                placeholder="Enter your email"
+                                required
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="phone">Phone Number</Label>
+                              <Input
+                                id="phone"
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                placeholder="Enter your phone number"
+                                required
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="message">Message (Optional)</Label>
+                              <Textarea
+                                id="message"
+                                value={formData.message}
+                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                                placeholder="Tell us why you'd like to volunteer..."
+                                className="resize-none"
+                                rows={3}
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
+                      <VolunteerForm eventId={event.id} eventTitle={event.title} />
                     </DialogContent>
                   </Dialog>
                 </CardFooter>
               </Card>
             ))}
           </div>
+
+          {/* No Results State */}
+          {filteredEvents.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <p className="text-lg text-gray-500">
+                No events found matching your criteria.
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory(null);
+                }}
+                className="text-gray-700 hover:text-gray-900"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          )}
         </div>
       </main>
-      <footer className="flex flex-col sm:flex-row justify-between items-center py-6 w-full shrink-0 px-4 sm:px-6 lg:px-8 border-t">
-        <p className="text-xs text-gray-500 dark:text-gray-400">© 2023 Eventify. All rights reserved.</p>
-        <nav className="flex gap-4 sm:gap-6 mt-4 sm:mt-0">
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Terms of Service
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="#">
-            Privacy
-          </Link>
-        </nav>
-      </footer>
     </div>
-  )
+  );
 }
