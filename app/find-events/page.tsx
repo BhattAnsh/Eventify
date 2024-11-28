@@ -4,47 +4,37 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, Clock, Users } from 'lucide-react';
+import { Calendar, MapPin, Clock} from 'lucide-react';
 import { dataManager } from '@/utils/dataManager';
 import { toast } from "sonner";
 import Image from 'next/image';
 import { Search } from 'lucide-react';
 import Navbar from '@/components/navbar';
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { VolunteerForm } from '@/components/volunteer-form';
 import { auth } from '@/utils/auth';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Event {
   id: string;
   title: string;
   description: string;
-  date: string;
-  time: string;
-  location: string;
-  category: string;
   imageUrl: string;
-  volunteersNeeded: number;
-  volunteersRegistered: number;
-  requirements: string[];
+  date?: string;
+  time?: string;
+  location?: string;
+  category: string;
 }
 
 export default function FindEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-  });
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const router = useRouter();
+
+  // Get categories using dataManager
+  const categories = dataManager.getCategories();
 
   useEffect(() => {
     if (!auth.isAuthenticated()) {
@@ -56,10 +46,8 @@ export default function FindEvents() {
   useEffect(() => {
     // Load initial data
     const allEvents = dataManager.getAllEvents();
-    const allCategories = dataManager.getCategories();
     setEvents(allEvents);
     setFilteredEvents(allEvents);
-    setCategories(allCategories);
   }, []);
 
   // Handle search and filtering
@@ -71,7 +59,7 @@ export default function FindEvents() {
       filtered = filtered.filter(event => 
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+        event.location?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -85,12 +73,9 @@ export default function FindEvents() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
       <Navbar />
 
-      {/* Main Content */}
       <main className="pt-24 pb-16 px-4">
-        {/* Header and Search Section */}
         <div className="max-w-7xl mx-auto space-y-12">
           {/* Header */}
           <div className="text-center space-y-4">
@@ -111,22 +96,15 @@ export default function FindEvents() {
                   placeholder="Search events..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 h-12 bg-gray-50 border-gray-200 
-                    placeholder:text-gray-400 text-gray-900
-                    focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary
-                    hover:border-gray-300 transition-colors rounded-xl"
+                  className="w-full pl-10 h-12 bg-gray-50 border-gray-200"
                 />
               </div>
               
               <Select
-                value={selectedCategory || undefined}
+                value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger 
-                  className="w-full sm:w-[180px] h-12 bg-gray-50 border-gray-200 
-                    text-gray-900 hover:border-gray-300 transition-colors rounded-xl
-                    focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
+                <SelectTrigger className="w-full sm:w-[180px] h-12 bg-gray-50 border-gray-200">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent className="bg-white">
@@ -144,10 +122,7 @@ export default function FindEvents() {
           {/* Events Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
             {filteredEvents.map((event) => (
-              <Card 
-                key={event.id} 
-                className="flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300 rounded-2xl border-gray-100"
-              >
+              <Card key={event.id} className="flex flex-col overflow-hidden group hover:shadow-lg transition-all duration-300">
                 {event.imageUrl && (
                   <div className="relative w-full pt-[66%] overflow-hidden">
                     <Image 
@@ -158,38 +133,35 @@ export default function FindEvents() {
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                       priority={false}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                 )}
 
-                <CardHeader className="space-y-2">
-                  <CardTitle className="text-xl font-semibold text-gray-900">
-                    {event.title}
-                  </CardTitle>
-                  <p className="text-sm text-gray-500 line-clamp-2">
-                    {event.description}
-                  </p>
+                <CardHeader>
+                  <CardTitle>{event.title}</CardTitle>
+                  <p className="text-sm text-gray-500 line-clamp-2">{event.description}</p>
                 </CardHeader>
-                
+
                 <CardContent className="flex-grow space-y-3">
-                  <div className="space-y-2 text-muted-foreground">
-                    <p className="flex items-center text-sm">
-                      <Calendar className="w-4 h-4 mr-2 text-primary" />
-                      {event.date}
-                    </p>
-                    <p className="flex items-center text-sm">
-                      <Clock className="w-4 h-4 mr-2 text-primary" />
-                      {event.time}
-                    </p>
-                    <p className="flex items-center text-sm">
-                      <MapPin className="w-4 h-4 mr-2 text-primary" />
-                      {event.location}
-                    </p>
-                    <div className="flex items-center justify-between pt-2">
-                      <p className="flex items-center text-sm">
-                        <Users className="w-4 h-4 mr-2 text-primary" />
-                        {event.volunteersRegistered}/{event.volunteersNeeded}
+                  <div className="space-y-2 text-sm text-gray-500">
+                    {event.date && (
+                      <p className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        {event.date}
                       </p>
+                    )}
+                    {event.time && (
+                      <p className="flex items-center">
+                        <Clock className="w-4 h-4 mr-2" />
+                        {event.time}
+                      </p>
+                    )}
+                    {event.location && (
+                      <p className="flex items-center">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {event.location}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
                       <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
                         {event.category}
                       </span>
@@ -197,121 +169,12 @@ export default function FindEvents() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col gap-3 pt-4">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        className="w-full h-11 hover:bg-primary/10 transition-colors"
-                      >
-                        View Details
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-semibold">
-                          {event.title}
-                        </DialogTitle>
-                        <DialogDescription>
-                          Event Details
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-6 py-4">
-                        {event.imageUrl && (
-                          <div className="relative w-full h-64 rounded-lg overflow-hidden">
-                            <Image 
-                              src={event.imageUrl} 
-                              alt={event.title}
-                              fill
-                              sizes="(max-width: 500px) 100vw"
-                              className="object-cover"
-                              priority={false}
-                            />
-                          </div>
-                        )}
-                        
-                        <p className="text-muted-foreground">{event.description}</p>
-                        
-                        <div className="space-y-3 bg-muted/50 p-4 rounded-lg">
-                          <p className="flex items-center text-sm">
-                            <Calendar className="w-4 h-4 mr-2 text-primary" />
-                            {event.date}
-                          </p>
-                          <p className="flex items-center text-sm">
-                            <Clock className="w-4 h-4 mr-2 text-primary" />
-                            {event.time}
-                          </p>
-                          <p className="flex items-center text-sm">
-                            <MapPin className="w-4 h-4 mr-2 text-primary" />
-                            {event.location}
-                          </p>
-                          <p className="flex items-center text-sm">
-                            <Users className="w-4 h-4 mr-2 text-primary" />
-                            {event.volunteersRegistered}/{event.volunteersNeeded} Volunteers
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <h4 className="font-semibold text-foreground">Requirements:</h4>
-                          <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-                            {event.requirements.map((req, index) => (
-                              <li key={index}>{req}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div className="space-y-4 pt-4 border-t">
-                          <h4 className="font-semibold text-foreground">Volunteer Registration</h4>
-                          <div className="space-y-3">
-                            <div className="grid gap-2">
-                              <Label htmlFor="name">Full Name</Label>
-                              <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                placeholder="Enter your full name"
-                                required
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="email">Email</Label>
-                              <Input
-                                id="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                placeholder="Enter your email"
-                                required
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="phone">Phone Number</Label>
-                              <Input
-                                id="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                placeholder="Enter your phone number"
-                                required
-                              />
-                            </div>
-                            <div className="grid gap-2">
-                              <Label htmlFor="message">Message (Optional)</Label>
-                              <Textarea
-                                id="message"
-                                value={formData.message}
-                                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                placeholder="Tell us why you'd like to volunteer..."
-                                className="resize-none"
-                                rows={3}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <VolunteerForm eventId={event.id} eventTitle={event.title} />
-                    </DialogContent>
-                  </Dialog>
+                <CardFooter>
+                  <Link href={`/events/${event.id}`} className="w-full">
+                    <Button variant="outline" className="w-full">
+                      View Details
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             ))}
@@ -327,9 +190,8 @@ export default function FindEvents() {
                 variant="outline" 
                 onClick={() => {
                   setSearchTerm('');
-                  setSelectedCategory(null);
+                  setSelectedCategory('all');
                 }}
-                className="text-gray-700 hover:text-gray-900"
               >
                 Clear Filters
               </Button>
