@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Calendar, MapPin, Clock, Users, Share2 } from 'lucide-react';
 import Navbar from '@/components/navbar';
@@ -10,6 +10,9 @@ import { dataManager } from '@/utils/dataManager';
 import { QRCodeSVG } from 'qrcode.react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { volunteerManager } from '@/utils/volunteerManager';
+import { auth } from '@/utils/auth';
+import { toast } from 'sonner';
 
 interface Event {
   id: string;
@@ -27,9 +30,12 @@ interface Event {
 
 export default function EventDetails() {
   const { id } = useParams();
+  const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [showQR, setShowQR] = useState(false);
   const qrRef = useRef<SVGSVGElement>(null);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     const eventData = dataManager.getEvent(id as string);
@@ -37,6 +43,15 @@ export default function EventDetails() {
       setEvent(eventData);
     }
   }, [id]);
+
+  // Check if user is registered when component mounts
+  useEffect(() => {
+    if (auth.isAuthenticated() && event) {
+      const user = auth.getUser();
+      const registered = volunteerManager.isUserRegistered(event.id, user.id);
+      setIsRegistered(registered);
+    }
+  }, [event]);
 
   const generateEventUrl = () => {
     return typeof window !== 'undefined' ? window.location.href : '';
@@ -89,6 +104,52 @@ export default function EventDetails() {
       </DialogContent>
     </Dialog>
   );
+
+  const handleVolunteerRegistration = async () => {
+    if (!auth.isAuthenticated()) {
+      toast.error('Please login to volunteer');
+      router.push('/login');
+      return;
+    }
+
+    try {
+      setIsRegistering(true);
+      const user = auth.getUser();
+      
+      await volunteerManager.registerVolunteer(event!.id, user.id);
+      setIsRegistered(true);
+      toast.success('Successfully registered as volunteer!');
+      
+      // Refresh event data
+      const updatedEvent = dataManager.getEvent(id as string);
+      if (updatedEvent) {
+        setEvent(updatedEvent);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to register');
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleCancelRegistration = async () => {
+    if (!auth.isAuthenticated()) return;
+
+    try {
+      const user = auth.getUser();
+      await volunteerManager.cancelRegistration(event!.id, user.id);
+      setIsRegistered(false);
+      toast.success('Registration cancelled successfully');
+      
+      // Refresh event data
+      const updatedEvent = dataManager.getEvent(id as string);
+      if (updatedEvent) {
+        setEvent(updatedEvent);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to cancel registration');
+    }
+  };
 
   if (!event) {
     return <div>Loading...</div>;
@@ -191,10 +252,50 @@ export default function EventDetails() {
 
               {/* Volunteer Registration Section */}
               <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <h3 className="text-xl font-semibold mb-6">Register to Volunteer</h3>
-                <Button className="w-full">
-                  Register Now
-                </Button>
+                <h3 className="text-xl font-semibold mb-6">Volunteer Registration</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Available Spots</span>
+                    <span className="font-medium">
+                      {event.volunteersNeeded! - event.volunteersRegistered!} remaining
+                    </span>
+                  </div>
+                  
+                  {isRegistered ? (
+                    <div className="space-y-3">
+                      <div className="bg-green-50 text-green-700 px-4 py-2 rounded-md text-sm">
+                        You are registered for this event
+                      </div>
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleCancelRegistration}
+                      >
+                        Cancel Registration
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      className="w-full" 
+                      onClick={handleVolunteerRegistration}
+                      disabled={isRegistering || event.volunteersRegistered! >= event.volunteersNeeded!}
+                    >
+                      {isRegistering ? (
+                        "Registering..."
+                      ) : event.volunteersRegistered! >= event.volunteersNeeded! ? (
+                        "Event Full"
+                      ) : (
+                        "Register Now"
+                      )}
+                    </Button>
+                  )}
+                  
+                  {event.volunteersRegistered! >= event.volunteersNeeded! && !isRegistered && (
+                    <p className="text-sm text-gray-500 text-center">
+                      This event is fully booked. Please check other events.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
