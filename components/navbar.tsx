@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export default function Navbar() {
   const router = useRouter();
@@ -180,12 +181,17 @@ export default function Navbar() {
                 </DropdownMenu>
               ) : (
                 <div className="hidden md:flex items-center space-x-4">
-                  <Button variant="ghost">
-                    <Link href="/login">Login</Link>
-                  </Button>
-                  <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                    <Link href="/signup">Sign Up</Link>
-                  </Button>
+                  <SignedOut>
+                    <Button variant="ghost">
+                      <Link href="/sign-in">Login</Link>
+                    </Button>
+                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                      <Link href="/sign-up">Sign Up</Link>
+                    </Button>
+                  </SignedOut>
+                  <SignedIn>
+                    <UserButton/>
+                  </SignedIn>
                 </div>
               )}
             </div>

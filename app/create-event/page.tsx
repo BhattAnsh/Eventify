@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { eventStorage } from '@/utils/storage';
-import ProtectedRoute from '@/components/protected-route';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,7 +79,6 @@ export default function CreateEvent() {
   }
 
   return (
-    <ProtectedRoute>
       <div className="flex flex-col min-h-screen">
         <Navbar />
         <main className="flex-1 py-12 px-4 md:px-6 lg:px-8 bg-background">
@@ -321,6 +319,5 @@ export default function CreateEvent() {
         </main>
         <Footer />
       </div>
-    </ProtectedRoute>
   );
 }

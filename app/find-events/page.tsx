@@ -7,12 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, MapPin, Clock} from 'lucide-react';
 import { dataManager } from '@/utils/dataManager';
-import { toast } from "sonner";
 import Image from 'next/image';
 import { Search } from 'lucide-react';
 import Navbar from '@/components/navbar';
-import { auth } from '@/utils/auth';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Event {
@@ -31,17 +28,10 @@ export default function FindEvents() {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const router = useRouter();
 
   // Get categories using dataManager
   const categories = dataManager.getCategories();
 
-  useEffect(() => {
-    if (!auth.isAuthenticated()) {
-      toast.error('Please login to view events');
-      router.push('/login');
-    }
-  }, [router]);
 
   useEffect(() => {
     // Load initial data
